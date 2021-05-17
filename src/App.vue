@@ -1,28 +1,75 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div class="container mt-5">
+    <div class="">
+      <Saldo v-bind:saldo="saldo" />
+      <Actions v-on:onNewTransaction="newTransaction" />
+    </div>
+    <Historico v-bind:historico="historico" />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
+  import Saldo from './components/Saldo';
+  import Historico from './components/Historico';
+  import Actions from './components/Actions';
+
+  import api from './services/api';
+
+  export default {
+    name: 'App',
+    components: {
+      Saldo,
+      Historico,
+      Actions
+    },
+    data: () => {
+      return{
+        saldo: 0,
+        historico: [],
+        loading: true
+      }
+    },
+
+    async mounted(){
+      
+      try{
+        const { data: dataAmmount } = await api.get('/transactions/ammount');
+        const { data: dataHistory } = await api.get('/transactions');
+
+        this.saldo = dataAmmount.ammount;
+        this.historico = dataHistory.transactions;
+        this.loading = false;
+
+      }catch(err){
+        console.log(err)
+      }
+    },
+
+    methods: {
+      newTransaction(dados){
+          const { ammount, type } = dados.transaction;
+          console.log(ammount)
+          if(type === 'Rx')
+            this.saldo += parseInt(ammount);
+          else
+            this.saldo -= parseInt(ammount);
+
+
+
+          this.historico.push(dados.transaction);
+      },
+
+    }
+
   }
-}
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+
+  .container{
+      display: flex;
+  
+  }
+
 </style>
